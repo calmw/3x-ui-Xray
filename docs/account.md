@@ -1,17 +1,17 @@
 # 创建账户
 
-先完成 [部署](deploy.md)，并在 ClashX Pro 里 [确认内核](clashx-pro.md#确认内核)。内核决定下面建哪一种入站。
+先完成 [部署](deploy.md)。默认按 Clash Verge Rev 建 VLESS + REALITY。只有继续使用 ClashX Pro 时，才建后面的 Trojan 或 Shadowsocks。客户端导入见 [客户端](clients.md)。
 
 面板有两套身份：
 
 | 名称 | 位置 | 用途 |
 | --- | --- | --- |
-| 管理员 | 登录框，初始 `admin` / `admin` | 管理这台服务器 |
-| 客户端 | 侧栏「客户端」 | 发给每一个 ClashX Pro 用户 |
+| 管理员 | 登录框。部署时用 `docker exec` 重置为 `admin` 和自己的密码 | 管理这台服务器 |
+| 客户端 | 侧栏「客户端」 | 发给每一个 Clash Verge Rev 或 ClashX Pro 用户 |
 
 入站是服务器上的一个监听端口，多人可以共用。每个用户单独建一个客户端，使用自己的邮箱和订阅 ID。流量、到期时间和订阅链接都记在客户端上。
 
-做完后回到 [导入订阅](clashx-pro.md#导入订阅)。
+做完后回到 [导入订阅](clients.md#导入到-clash-verge-rev)。
 
 ## 1. 打开订阅
 
@@ -29,7 +29,7 @@
 
 然后放行所选端口。host 网络下不用修改 `docker-compose.yml`。
 
-### Meta / Mihomo
+### Clash Verge Rev
 
 | 表单项 | 填写 |
 | --- | --- |
@@ -44,7 +44,7 @@
 
 稍后添加客户端时，Flow 填 `xtls-rprx-vision`。伪装域名的证书放在对方网站上，本机 `cert/` 不用放它的证书。
 
-### Premium 已有域名
+### ClashX Pro 已有域名
 
 证书和私钥放进仓库的 `cert/`。容器内路径是 `/root/cert/`。
 
@@ -58,7 +58,7 @@
 | 私钥文件 | `/root/cert/<私钥文件名>` |
 | SNI | 证书上的域名 |
 
-### Premium 没有域名
+### ClashX Pro 没有域名
 
 用 Shadowsocks 先验证连通。协议选 `shadowsocks`，加密选 `aes-256-gcm` 或 `chacha20-ietf-poly1305`，密码用面板生成的值，端口自定，安全留空。加密算法保持这两项之一；`2022-blake3-*` 不会出现在 `/clash-legacy/` 订阅里。
 
@@ -71,14 +71,16 @@
 | 表单项 | 填写 |
 | --- | --- |
 | 邮箱 | 该用户的唯一名称，例如 `zhangsan`。用来区分账户 |
-| 入站 | 勾选上一步的入站。VLESS 的 Flow 填 `xtls-rprx-vision` |
+| 关联入站 | 点开下拉框，选刚才那条入站。选项文字是入站备注；没填备注时显示系统标签，例如 `in-443-tcp`，按端口认即可。一个人只选这一条 |
 | 订阅 ID | 保留自动生成的值 |
 | 总流量 | 单位 GB。`0` 表示不限制 |
 | 到期时间 | 留空表示不过期 |
 | IP 限制 | 同时在线设备数。`0` 表示不限制 |
 | 启用 | 打开 |
 
-保存后，这一行的已关联入站里出现刚选的入站。表单里没有入站栏时，保存后用该行的「附加」选中入站。Xray 会自行重载。
+下拉框是空的，说明还没有启用的入站。先到「入站」里建好并打开启用，再回到这个表单。选中 VLESS 入站后，在凭据页把 Flow 填成 `xtls-rprx-vision`。
+
+保存后，这一行的关联入站里出现刚选的那条。Xray 会自行重载。
 
 下一位用户重复本节，使用新的邮箱和订阅 ID。同一个客户端被多人使用时，流量会计在一起，链接也能通用。
 
@@ -88,14 +90,22 @@
 
 在该客户端一行打开「订阅链接」。复制 Clash / Mihomo 地址。列表里只有 `/sub/<订阅 ID>` 时，按内核改成：
 
-| 内核 | 地址 |
+| 客户端 | 地址 |
 | --- | --- |
-| Clash Premium | `http://<服务器IP或域名>:2096/clash-legacy/<订阅 ID>` |
-| Meta / Mihomo | `http://<服务器IP或域名>:2096/mihomo/<订阅 ID>` |
+| Clash Verge Rev | `http://<服务器IP或域名>:2096/mihomo/<订阅 ID>` |
+| ClashX Pro | `http://<服务器IP或域名>:2096/clash-legacy/<订阅 ID>` |
 
 订阅设置里改过端口、域名或路径时，用面板上显示的完整地址。配置了订阅证书后使用 `https://`。
 
-`/clash-legacy/` 包含 Shadowsocks、VMess 和 Trojan。客户端只挂了 VLESS 或 REALITY 时，这个地址返回 422，改用 `/mihomo/` 并确认 ClashX Pro 的内核是 Meta / Mihomo。
+这个地址的内容就是 Clash 用的 YAML。在能访问 2096 的机器上保存成文件，把地址换成上面复制的那条：
+
+```bash
+curl -fsSL "http://<服务器IP>:2096/mihomo/<订阅 ID>" -o clash.yml
+```
+
+ClashX Pro 把路径换成 `/clash-legacy/<订阅 ID>`。浏览器打开同一地址，也可以把页面另存为 `clash.yml`。文件里包含节点凭证。客户端直接填写订阅地址即可，面板改配置后更新订阅就能拿到新内容；本地 `clash.yml` 是当时的一份快照。
+
+`/clash-legacy/` 包含 Shadowsocks、VMess 和 Trojan。客户端只挂了 VLESS 或 REALITY 时，这个地址返回 422。Clash Verge Rev 改用 `/mihomo/`。
 
 ## 5. 核对
 
@@ -106,7 +116,7 @@
 ss -lnt | grep ':443'
 ```
 
-3. 把地址交给用户，按 [导入订阅](clashx-pro.md#导入订阅) 更新配置。延迟测试出现数字后，这个账户即可使用。超时或其他现象见 [排障](deploy.md#排障)。
+3. 把地址交给用户，按 [导入订阅](clients.md#导入到-clash-verge-rev) 更新配置。延迟测试出现数字后，这个账户即可使用。超时或其他现象见 [排障](deploy.md#排障)。
 
 ## 停用
 

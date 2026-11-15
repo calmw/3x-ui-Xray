@@ -2,7 +2,9 @@
 #
 # 启动：docker compose -f deploy/docker-compose.yml up -d
 # 面板：http://<服务器IP>:2053/panel/
-# Docker 首次启动的默认账号密码是 admin / admin，登录后立刻修改。
+# 启动后重置登录密码：
+# docker exec 3x-ui /app/x-ui setting -username admin -password '你的新密码'
+# docker restart 3x-ui
 
 name: 3x-ui
 
