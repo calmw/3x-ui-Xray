@@ -20,3 +20,5 @@
 | ClashX Pro | Trojan + TLS，或 Shadowsocks | `/clash-legacy/<订阅 ID>` |
 
 `/sub/<订阅 ID>` 返回分享链接。客户端使用上表里的路径。各客户端的导入步骤见 [客户端](docs/clients.md)。
+
+**使用时请遵守您当地法律法规。本仓库代码仅供学习交流，不承担任何法律责任。**
