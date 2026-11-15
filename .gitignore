@@ -1,0 +1,10 @@
+.idea/
+.DS_Store
+
+# 本地部署产生的数据，不要提交
+db/
+cert/
+pgdata/
+*.db
+*.db-journal
+install-result.env

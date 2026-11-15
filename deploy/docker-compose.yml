@@ -1,0 +1,26 @@
+# 在 Linux 服务器上部署 3X-UI（Xray 面板）。使用 host 网络，代理流量直接走宿主机网卡。
+#
+# 启动：docker compose -f deploy/docker-compose.yml up -d
+# 面板：http://<服务器IP>:2053/panel/
+# Docker 首次启动的默认账号密码是 admin / admin，登录后立刻修改。
+
+name: 3x-ui
+
+services:
+  3xui:
+    image: ghcr.io/mhsanaei/3x-ui:latest
+    container_name: 3x-ui
+    network_mode: host
+    # Fail2ban 用 iptables 执行客户端 IP 限制，需要这两项能力。
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ../db:/etc/x-ui
+      - ../cert:/root/cert
+    environment:
+      XRAY_VMESS_AEAD_FORCED: "false"
+      XUI_ENABLE_FAIL2BAN: "true"
+      # 只在数据库第一次初始化时生效。
+      XUI_INIT_WEB_BASE_PATH: "/panel/"
+    restart: unless-stopped
